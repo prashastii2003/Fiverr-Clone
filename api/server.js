@@ -10,28 +10,34 @@ import messageRoute from './routes/message.route.js';
 import authRoute from './routes/auth.route.js';
 import cookieParser from "cookie-parser";
 import cors from 'cors';
+
+dotenv.config();
+
+const app = express();
+
+//  Root route (should come after `app` is defined)
 app.get("/", (req, res) => {
   res.send("Fiverr Clone Backend is Running 🚀");
 });
 
-const app = express();
-dotenv.config();
+// Connect to MongoDB
 mongoose.set('strictQuery', true);
 const connect = async () => {
   try {
-   await mongoose.connect(process.env.MONGO_URL); 
-   console.log('database connected');
+    await mongoose.connect(process.env.MONGO_URL); 
+    console.log(' MongoDB connected');
   } catch (error) {
-    console.log(error);
+    console.error('MongoDB connection error:', error);
   }
 };
-//middleware
-//frontend port number
-app.use(cors({origin:"http://localhost:3000",credentials:true}));
+
+// Middlewares
+app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
 
-app.use('/api/auth/', authRoute);
+// API routes
+app.use('/api/auth', authRoute);
 app.use('/api/users', userRoute);
 app.use('/api/gigs', gigRoute);
 app.use('/api/reviews', reviewRoute);
@@ -39,15 +45,16 @@ app.use('/api/orders', orderRoute);
 app.use('/api/conversations', conversationRoute);
 app.use('/api/messages', messageRoute);
 
-
+// Error handler
 app.use((err, req, res, next) => {
-  const errorStatus = err.status || 500
-  const errorMessage = err.message || "Something went wrong"
-
+  const errorStatus = err.status || 500;
+  const errorMessage = err.message || "Something went wrong!";
   return res.status(errorStatus).send(errorMessage);
-})
-//backend port number
-app.listen(8000, () => {
+});
+
+// Start server
+const PORT = process.env.PORT || 8000;
+app.listen(PORT, () => {
   connect();
-  console.log('localserver running');
+  console.log(` Server running on port ${PORT}`);
 });
