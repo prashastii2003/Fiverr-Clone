@@ -1,9 +1,8 @@
 import axios from "axios";
 
-//backend port number
-const newRequest=axios.create({
-    baseURL:"http://localhost:8000/api/",
-    withCredentials:true,
-})
+const newRequest = axios.create({
+  baseURL: process.env.REACT_APP_BASE_URL,
+  withCredentials: true,
+});
 
 export default newRequest;
