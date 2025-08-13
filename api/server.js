@@ -17,7 +17,7 @@ const app = express();
 
 //  Root route (should come after `app` is defined)
 app.get("/", (req, res) => {
-  res.send("Fiverr Clone Backend is Running 🚀");
+  res.send("Worksphere Clone Backend is Running 🚀");
 });
 
 // Connect to MongoDB

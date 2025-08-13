@@ -1,174 +1,220 @@
-import React, { useEffect, useState } from 'react';
-import './navbar.scss'
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import newRequest from '../../utils/newRequest';
+import React, { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import newRequest from "../../utils/newRequest";
+
 const Navbar = () => {
-    const [active, setactive] = useState(false);
-    const [active1, setactive1] = useState(false);
-    const [open, setopen] = useState(false);
-    const { pathname } = useLocation();
-    const isActive = () => {
-        window.scrollY > 0 ? setactive(true) : setactive(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [showCategories, setShowCategories] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [searchInput, setSearchInput] = useState("");
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
+
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await newRequest.post("/auth/logout");
+      localStorage.setItem("currentUser", null);
+      navigate("/");
+    } catch (err) {
+      console.error(err);
     }
-    const isActive1 = () => {
-        window.scrollY > 50 ? setactive1(true) : setactive1(false);
+  };
+
+  const handleSearch = () => {
+    if (searchInput.trim()) {
+      navigate(`/gigs?search=${searchInput}`);
     }
-    useEffect(() => {
-        window.addEventListener('scroll', isActive);
-        window.addEventListener('scroll', isActive1);
-        return () => {
-            window.removeEventListener('scroll', isActive);
-            window.removeEventListener('scroll', isActive1);
-        }
-    }, []);
+  };
 
-    const current_user = JSON.parse(localStorage.getItem('currentUser'));
+  const categories = [
+    "Graphics & Design",
+    "Video & Animation",
+    "Writing & Translation",
+    "AI Services",
+    "Digital Marketing",
+    "Music & Audio",
+    "Programming & Tech",
+    "Business",
+    "Lifestyle",
+  ];
 
-    const navigate = useNavigate();
+  return (
+    <header
+      className={`fixed w-full top-0 z-50 transition-all ${
+        isScrolled || pathname !== "/"
+          ? "bg-white shadow-md"
+          : "bg-transparent"
+      }`}
+    >
+      {/* Main Nav */}
+      <div className="flex items-center justify-between px-6 py-3 max-w-7xl mx-auto">
+        {/* Logo */}
+        <Link to="/" className="flex items-center gap-1">
+          <span className="text-2xl font-bold text-indigo-600">
+            WorkSphere
+          </span>
+          <span className="text-indigo-500 text-2xl">•</span>
+        </Link>
 
-    const handleLogout = async () => {
-        try {
-            await newRequest.post('/auth/logout');
-            localStorage.setItem("currentUser", null);
-            navigate("/")
-        } catch (err) {
-            console.log(err);
-        }
-    }
-    const [input, setinput] = useState("");
-    const handlesubmit = () => {
-        navigate(`gigs?search=${input}`);
-    }
-    return ([
-        <div className={active || pathname !== "/" ? "navbar active" : "navbar "}>
-            <div className="container">
-                <div className="logo">
-                    <Link to='/' className='link'>
-                        <span className='log'>fiverr</span>
-                    </Link>
-                    <span className='dot'>.</span>
-                </div>
-                {active  && <div className="navbarsearch">
-                    <input type="text" placeholder='what service are you looking for today?' onChange={e => setinput(e.target.value)} />
-                    <div className="search">
-                        <img src="/images/search.png" alt="" onClick={handlesubmit} />
-                    </div>
-                </div>}
-                <div className="links">
-                    <span onClick={()=>navigate('/becomeseller')}>fiverr Business</span>
-                    <span className="tooltip ">Explore
-                        <span className="tooltiptext">
-                            <div className="col">
-                                <div className="item_tooltip">
-                                    <h4 className='item_tooltip_header'>Discover</h4>
-                                    <p className='item_tooltip_desc'>Inspiring projects made on Fiverr</p>
-                                </div>
-                                <div className="item_tooltip">
-                                    <h4 className='item_tooltip_header'>Guides</h4>
-                                    <p className='item_tooltip_desc'>In-depth guides covering business topics</p>
-                                </div>
-                                <div className="item_tooltip">
-                                    <h4 className='item_tooltip_header'>Podcast</h4>
-                                    <p className='item_tooltip_desc'>Inside tips from top business minds</p>
-                                </div>
-                                <div className='item_tooltip'>
-                                    <h4 className='item_tooltip_header'>Logo Maker</h4>
-                                    <p className='item_tooltip_desc'>Create your logo instantly</p>
-                                </div>
-                            </div>
-                            
-                            <div className="col">
-                                <div className="item_tooltip">
-                                    <h4 className='item_tooltip_header'>Community</h4>
-                                    <p className='item_tooltip_desc'>Connect with Fiverr’s team and community</p>
-                                </div>
-                                <div className="item_tooltip">
-                                    <h4 className='item_tooltip_header'>Podcast</h4>
-                                    <p className='item_tooltip_desc'>Inside tips from top business minds</p>
-                                </div>
-                                <div className="item_tooltip">
-                                    <h4 className='item_tooltip_header'>Blog</h4>
-                                    <p className='item_tooltip_desc'>News, information and community stories</p>
-                                </div>
-                                <div className="item_tooltip">
-                                    <h4 className='item_tooltip_header'>Fiverr Workspace</h4>
-                                    <p className='item_tooltip_desc'>One place to manage your business</p>
-                                </div>
-                            </div>
-                        </span>
-                    </span>
-                    <span>
-                        <img src='/images/language.png' alt='' width={'18px'} height={'16px'}
-                            style={{ marginRight: '10px' }}>
-                        </img>
-                        English
-                    </span>
-                    <Link to='/login' className='link' key={333}><span>Sign in</span></Link>
+        {/* Search bar (only when scrolled or not on homepage) */}
+        {(isScrolled || pathname !== "/") && (
+          <div className="flex items-center bg-gray-100 rounded-full px-3 py-1 w-96">
+            <input
+              type="text"
+              placeholder="Search for services..."
+              className="flex-1 bg-transparent outline-none text-sm px-2"
+              onChange={(e) => setSearchInput(e.target.value)}
+            />
+            <button onClick={handleSearch}>
+              <img
+                src="/images/search.png"
+                alt="Search"
+                className="w-5 h-5 cursor-pointer"
+              />
+            </button>
+          </div>
+        )}
 
-                    {!current_user?.isSeller && <span onClick={e => navigate('/becomeSeller')}>Become a Seller</span>}
-                    {!current_user && <button onClick={e => navigate(`/register`)}>Join</button>}
-                    {
-                        current_user && (
-                            <div className="user" onClick={() => setopen(!open)}>
-                                <img src={current_user.img || '/images/noavtar.jpeg'} alt="" />
-                                <span>{current_user?.username}</span>
-                                {open && (
-                                    <div className="options">
-                                        {
-                                            current_user.isSeller && (
-                                                <>
-                                                    <Link className='link' key={555} to='/mygigs'>Gigs</Link>
-                                                    <Link className='link' key={999} to='/add'>Add New Gig</Link>
-                                                </>
-                                            )
-                                        }
-                                        <Link className='link' key={9996} to='/orders'>Orders</Link>
-                                        <Link className='link' key={9995} to='/messages'>Messages</Link>
-                                        <Link className='link' key={9993} onClick={handleLogout}>Logout</Link>
-                                    </div>
-                                )}
-                            </div>
-                        )
-                    }
-                </div>
-            </div>
+        {/* Links & User Menu */}
+        <nav className="flex items-center gap-6 text-sm font-medium text-gray-700">
+          <span
+            onClick={() => navigate("/becomeseller")}
+            className="cursor-pointer hover:text-indigo-600"
+          >
+            WorkSphere Business
+          </span>
 
-            {(active1 || pathname !== "/") && (
-                <>
-                    <hr />
-                    <div className="menu">
-                        <Link key={9983} className='link menulink' to='/'>
-                            Graphics & Design
-                        </Link>
-                        <Link key={9883} className='link menulink' to='/'>
-                            Video & Animation
-                        </Link>
-                        <Link key={9988} className='link menulink' to='/'>
-                            Writing & Translation
-                        </Link>
-                        <Link key={9981} className='link menulink' to='/'>
-                            AI Services
-                        </Link>
-                        <Link key={9982} className='link menulink' to='/'>
-                            Digital Marketing
-                        </Link>
-                        <Link key={9903} className='link menulink' to='/'>
-                            Music & Audio
-                        </Link>
-                        <Link key={99883} className='link menulink' to='/'>
-                            Programming & Tech
-                        </Link>
-                        <Link key={99083} className='link menulink' to='/'>
-                            Business
-                        </Link>
-                        <Link key={93983} className='link menulink' to='/'>
-                            Lifestyle
-                        </Link>
-                    </div>
-                    <hr />
-                </>
+          {/* Explore Dropdown */}
+          <div
+            className="relative"
+            onMouseEnter={() => setShowCategories(true)}
+            onMouseLeave={() => setShowCategories(false)}
+          >
+            <span className="cursor-pointer hover:text-indigo-600">
+              Explore
+            </span>
+            {showCategories && (
+              <div className="absolute left-0 mt-2 bg-white border rounded-lg shadow-lg w-56">
+                {categories.map((cat) => (
+                  <Link
+                    key={cat}
+                    to="/"
+                    className="block px-4 py-2 hover:bg-gray-100 text-gray-800"
+                  >
+                    {cat}
+                  </Link>
+                ))}
+              </div>
             )}
-        </div >
-    ]);
-}
+          </div>
+
+          <span className="flex items-center gap-2">
+            <img
+              src="/images/language.png"
+              alt="Language"
+              className="w-4 h-4"
+            />
+            English
+          </span>
+
+          {!currentUser && (
+            <>
+              <Link to="/login" className="hover:text-indigo-600">
+                Sign in
+              </Link>
+              <button
+                onClick={() => navigate("/register")}
+                className="bg-indigo-600 text-white px-4 py-1 rounded-full hover:bg-indigo-700"
+              >
+                Join
+              </button>
+            </>
+          )}
+
+          {currentUser && (
+            <div
+              className="relative"
+              onClick={() => setShowUserMenu((prev) => !prev)}
+            >
+              <div className="flex items-center gap-2 cursor-pointer">
+                <img
+                  src={currentUser.img || "/images/noavtar.jpeg"}
+                  alt="User"
+                  className="w-8 h-8 rounded-full object-cover"
+                />
+                <span>{currentUser.username}</span>
+              </div>
+              {showUserMenu && (
+                <div className="absolute right-0 mt-2 bg-white border rounded-lg shadow-lg w-40">
+                  {currentUser.isSeller && (
+                    <>
+                      <Link
+                        to="/mygigs"
+                        className="block px-4 py-2 hover:bg-gray-100"
+                      >
+                        Gigs
+                      </Link>
+                      <Link
+                        to="/add"
+                        className="block px-4 py-2 hover:bg-gray-100"
+                      >
+                        Add New Gig
+                      </Link>
+                    </>
+                  )}
+                  <Link
+                    to="/orders"
+                    className="block px-4 py-2 hover:bg-gray-100"
+                  >
+                    Orders
+                  </Link>
+                  <Link
+                    to="/messages"
+                    className="block px-4 py-2 hover:bg-gray-100"
+                  >
+                    Messages
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </nav>
+      </div>
+
+      {/* Secondary menu when scrolled */}
+      {(isScrolled || pathname !== "/") && (
+        <div className="bg-gray-50 border-t">
+          <div className="max-w-7xl mx-auto flex gap-6 px-6 py-2 text-sm text-gray-600 overflow-x-auto">
+            {categories.map((cat) => (
+              <Link
+                key={cat}
+                to="/"
+                className="whitespace-nowrap hover:text-indigo-600"
+              >
+                {cat}
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+    </header>
+  );
+};
+
 export default Navbar;

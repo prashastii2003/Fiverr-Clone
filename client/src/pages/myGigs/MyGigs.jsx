@@ -1,6 +1,5 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import "./myGigs.scss";
 import getCurrentUser from "../../utils/getCurrentUser";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import newRequest from "../../utils/newRequest";
@@ -8,18 +7,15 @@ import newRequest from "../../utils/newRequest";
 function MyGigs() {
   const currentUser = getCurrentUser();
   const queryClient = useQueryClient();
+
   const { isLoading, error, data } = useQuery({
     queryKey: ["myGigs"],
     queryFn: () =>
-      newRequest.get(`/gigs?userId=${currentUser._id}`).then((res,req) => {
-        return res.data;
-      }),
+      newRequest.get(`/gigs?userId=${currentUser._id}`).then((res) => res.data),
   });
-  
+
   const mutation = useMutation({
-    mutationFn: (id) => {
-      return newRequest.delete(`/gigs/${id}`);
-    },
+    mutationFn: (id) => newRequest.delete(`/gigs/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries(["myGigs"]);
     },
@@ -28,51 +24,68 @@ function MyGigs() {
   const handleDelete = (id) => {
     mutation.mutate(id);
   };
+
   return (
-    <div className="myGigs">
+    <div className="p-6">
       {isLoading ? (
-        "loading"
+        "loading..."
       ) : error ? (
         "error"
       ) : (
-        <div className="container">
-          <div className="title">
-            <h1>Gigs</h1>
+        <div className="max-w-[1400px] mx-auto">
+          {/* Title Section */}
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-2xl font-bold">Gigs</h1>
             {currentUser.isSeller && (
               <Link to="/add">
-                <button>Add New Gig</button>
+                <button className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg">
+                  Add New Gig
+                </button>
               </Link>
             )}
           </div>
-          <table>
-            <tbody>
-            <tr>
-              <th>Image</th>
-              <th>Title</th>
-              <th>Price</th>
-              <th>Sales</th>
-              <th>Action</th>
-            </tr>
-            {data.map((gig) => (
-              <tr key={gig._id}>
-                <td>
-                  <img className="image" src={gig.cover} alt="" />
-                </td>
-                <td>{gig.title}</td>
-                <td>{gig.price}</td>
-                <td>{gig.sales}</td>
-                <td>
-                  <img
-                    className="delete"
-                    src="/images/delete.png"
-                    alt=""
-                    onClick={() => handleDelete(gig._id)}
-                  />
-                </td>
-              </tr>
-            ))}
-            </tbody>
-          </table>
+
+          {/* Table */}
+          <div className="overflow-x-auto bg-white rounded-lg shadow">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="bg-gray-100 text-left text-gray-700">
+                  <th className="p-3 border-b">Image</th>
+                  <th className="p-3 border-b">Title</th>
+                  <th className="p-3 border-b">Price</th>
+                  <th className="p-3 border-b">Sales</th>
+                  <th className="p-3 border-b">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.map((gig) => (
+                  <tr
+                    key={gig._id}
+                    className="hover:bg-gray-50 transition-colors"
+                  >
+                    <td className="p-3 border-b">
+                      <img
+                        className="w-16 h-16 object-cover rounded-md"
+                        src={gig.cover}
+                        alt={gig.title}
+                      />
+                    </td>
+                    <td className="p-3 border-b">{gig.title}</td>
+                    <td className="p-3 border-b">${gig.price}</td>
+                    <td className="p-3 border-b">{gig.sales}</td>
+                    <td className="p-3 border-b">
+                      <img
+                        className="w-6 h-6 cursor-pointer hover:opacity-70"
+                        src="/images/delete.png"
+                        alt="Delete"
+                        onClick={() => handleDelete(gig._id)}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>

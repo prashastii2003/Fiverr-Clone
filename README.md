@@ -1,4 +1,4 @@
-# Fiverr Clone Backend 🚀
+# Worksphere Backend 🚀
 
 This is the **backend server** for a Fiverr-like freelance marketplace platform, built with **Node.js**, **Express**, and **MongoDB**.  
 It supports user authentication, gig creation, order management, and more.

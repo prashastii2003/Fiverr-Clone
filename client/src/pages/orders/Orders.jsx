@@ -1,65 +1,101 @@
 import React from "react";
-import './orders.scss';
 import { useQuery } from "@tanstack/react-query";
 import newRequest from "../../utils/newRequest";
 import { useNavigate } from "react-router-dom";
+
 const Orders = () => {
-    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
-    const navigate = useNavigate();
-    const { isLoading, error, data } = useQuery({
-        queryKey: ['orders'],
-        queryFn: () =>
-            newRequest.get(`/orders`)
-                .then((res) => {
-                    return res.data;
-                })
-    });
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  const navigate = useNavigate();
 
-    const handleContact = async (order) => {
-        const sellerId = order.sellerId;
-        const buyerId = order.buyerId;
-        const id = sellerId + buyerId;
-        try {
-            const res = await newRequest.get(`/conversations/single/${id}`);
-            navigate(`/message/${res.data.id}`)
+  const { isLoading, error, data } = useQuery({
+    queryKey: ["orders"],
+    queryFn: () =>
+      newRequest.get(`/orders`).then((res) => {
+        return res.data;
+      }),
+  });
 
-        } catch (error) {
-            // console.log(error);
-            if (error.response.status===404) {
-                const res = await newRequest.post(`/conversations`, { to: currentUser.isSeller ? buyerId : sellerId });
-                navigate(`/message/${res.data.id}`)
-            }
-        }
+  const handleContact = async (order) => {
+    const sellerId = order.sellerId;
+    const buyerId = order.buyerId;
+    const id = sellerId + buyerId;
+
+    try {
+      const res = await newRequest.get(`/conversations/single/${id}`);
+      navigate(`/message/${res.data.id}`);
+    } catch (error) {
+      if (error.response.status === 404) {
+        const res = await newRequest.post(`/conversations`, {
+          to: currentUser.isSeller ? buyerId : sellerId,
+        });
+        navigate(`/message/${res.data.id}`);
+      }
     }
-    console.log(data);
-    return ([
-        <div className="orders">
-            {isLoading ? "loading" : error ? "something went wrong" : <div className="container">
-                <div className="title">
-                    <h1>Orders</h1>
-                </div>
-                <table>
-                    <tr>
-                        <th>Image</th>
-                        <th>Title</th>
-                        <th>Price</th>
-                        <th>Contact</th>
-                    </tr>
-                    {data.map((order) => (
-                        <tr key={order._id}>
-                            <td>
-                                <img src={data.img} alt="" className="img" />
-                            </td>
-                            <td>{order.title}</td>
-                            <td>{order.price}</td>
-                            <td>
-                                <img className="message" src="/images/message.png" alt="" onClick={() => handleContact(order)} />
-                            </td>
-                        </tr>
-                    ))}
-                </table>
-            </div>}
+  };
+
+  return (
+    <div className="w-full flex justify-center py-10 px-4">
+      {isLoading ? (
+        "Loading..."
+      ) : error ? (
+        "Something went wrong"
+      ) : (
+        <div className="w-full max-w-6xl bg-white p-6 rounded-lg shadow-md">
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold text-gray-800">Orders</h1>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full border border-gray-200">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 border">
+                    Image
+                  </th>
+                  <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 border">
+                    Title
+                  </th>
+                  <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 border">
+                    Price
+                  </th>
+                  <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 border">
+                    Contact
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.map((order) => (
+                  <tr
+                    key={order._id}
+                    className="hover:bg-gray-50 transition-colors"
+                  >
+                    <td className="py-2 px-4 border">
+                      <img
+                        src={order.img}
+                        alt=""
+                        className="w-16 h-16 object-cover rounded"
+                      />
+                    </td>
+                    <td className="py-2 px-4 border">{order.title}</td>
+                    <td className="py-2 px-4 border font-medium text-green-600">
+                      ${order.price}
+                    </td>
+                    <td className="py-2 px-4 border text-center">
+                      <img
+                        className="w-6 h-6 cursor-pointer hover:scale-110 transition-transform"
+                        src="/images/message.png"
+                        alt="message"
+                        onClick={() => handleContact(order)}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-    ]);
-}
+      )}
+    </div>
+  );
+};
+
 export default Orders;
