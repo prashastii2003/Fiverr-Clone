@@ -1,4 +1,5 @@
 import React from 'react';
+import './index.css'; // or tailwind.css if that's your build output
 import Footer from './components/Footer/Footer';
 import Navbar from './components/Navbar/Navbar';
 import Add from './pages/add/Add';
